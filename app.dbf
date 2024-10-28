@@ -1,0 +1,117 @@
+-- Creación de la tabla de Usuarios
+CREATE TABLE Usuarios (
+    usuario_id SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    correo VARCHAR(100) UNIQUE NOT NULL,
+    contraseña VARCHAR(100) NOT NULL,
+    rol ENUM('alumno', 'mentor', 'profesor') NOT NULL,
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    estado ENUM('activo', 'inactivo') DEFAULT 'activo'
+);
+
+-- Creación de la tabla de Materias
+CREATE TABLE Materias (
+    materia_id SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    descripcion TEXT
+);
+
+-- Creación de la tabla de Grupos
+CREATE TABLE Grupos (
+    grupo_id SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    descripcion TEXT,
+    materia_id INT REFERENCES Materias(materia_id),
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    estado ENUM('activo', 'inactivo') DEFAULT 'activo',
+    tipo ENUM('publico', 'privado') DEFAULT 'publico' -- Indica si el grupo es privado o público
+);
+
+-- Creación de la tabla de Miembros del Grupo
+CREATE TABLE Miembros_Grupo (
+    miembro_id SERIAL PRIMARY KEY,
+    grupo_id INT REFERENCES Grupos(grupo_id),
+    usuario_id INT REFERENCES Usuarios(usuario_id),
+    rol ENUM('miembro', 'mentor') NOT NULL
+);
+
+-- Creación de la tabla de Solicitudes de Ayuda
+CREATE TABLE Solicitudes_Ayuda (
+    solicitud_id SERIAL PRIMARY KEY,
+    usuario_id INT REFERENCES Usuarios(usuario_id),
+    materia_id INT REFERENCES Materias(materia_id),
+    descripcion TEXT NOT NULL,
+    estado ENUM('pendiente', 'en_proceso', 'resuelto') DEFAULT 'pendiente',
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Creación de la tabla de Mensajes
+CREATE TABLE Mensajes (
+    mensaje_id SERIAL PRIMARY KEY,
+    grupo_id INT REFERENCES Grupos(grupo_id),
+    usuario_id INT REFERENCES Usuarios(usuario_id),
+    contenido TEXT NOT NULL,
+    fecha_envio TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Creación de la tabla de Calificaciones
+CREATE TABLE Calificaciones (
+    calificacion_id SERIAL PRIMARY KEY,
+    mentor_id INT REFERENCES Usuarios(usuario_id),
+    usuario_id INT REFERENCES Usuarios(usuario_id),
+    calificacion INT CHECK (calificacion BETWEEN 1 AND 5),
+    comentario TEXT,
+    fecha_calificacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Creación de la tabla de Sesiones de Ayuda
+CREATE TABLE Sesiones_Ayuda (
+    sesion_id SERIAL PRIMARY KEY,
+    grupo_id INT REFERENCES Grupos(grupo_id),
+    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    tema VARCHAR(100) NOT NULL,
+    descripcion TEXT,
+    mentor_id INT REFERENCES Usuarios(usuario_id),
+    duracion INTERVAL
+);
+
+-- Creación de la tabla de Notificaciones
+CREATE TABLE Notificaciones (
+    notificacion_id SERIAL PRIMARY KEY,
+    usuario_id INT REFERENCES Usuarios(usuario_id),
+    tipo ENUM('mensaje_nuevo', 'respuesta_solicitud', 'recordatorio_sesion') NOT NULL,
+    contenido TEXT NOT NULL,
+    fecha_envio TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    leido BOOLEAN DEFAULT FALSE
+);
+
+-- Creación de la tabla de Recursos
+CREATE TABLE Recursos (
+    recurso_id SERIAL PRIMARY KEY,
+    grupo_id INT REFERENCES Grupos(grupo_id),
+    titulo VARCHAR(100) NOT NULL,
+    descripcion TEXT,
+    enlace TEXT, -- Enlace o URL al recurso si es externo
+    fecha_publicacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Creación de la tabla de Progreso del Alumno
+CREATE TABLE Progreso_Alumno (
+    progreso_id SERIAL PRIMARY KEY,
+    usuario_id INT REFERENCES Usuarios(usuario_id),
+    materia_id INT REFERENCES Materias(materia_id),
+    descripcion TEXT, -- Descripción del progreso o meta alcanzada
+    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    estado ENUM('pendiente', 'en_proceso', 'completado') DEFAULT 'pendiente'
+);
+
+-- Creación de la tabla de Invitaciones
+CREATE TABLE Invitaciones (
+    invitacion_id SERIAL PRIMARY KEY,
+    grupo_id INT REFERENCES Grupos(grupo_id),
+    usuario_id INT REFERENCES Usuarios(usuario_id), -- Usuario que recibe la invitación
+    emisor_id INT REFERENCES Usuarios(usuario_id), -- Usuario que envía la invitación (generalmente un mentor o administrador)
+    estado ENUM('pendiente', 'aceptada', 'rechazada') DEFAULT 'pendiente',
+    fecha_invitacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_respuesta TIMESTAMP
+);
